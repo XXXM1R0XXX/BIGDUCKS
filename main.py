@@ -14,14 +14,27 @@ logging.basicConfig(level=logging.INFO)
 conn = sqlite3.connect('Social Taxi.db')
 cur = conn.cursor()
 admin_id = [919865126, 1688428776]
+from getpass import getpass
+from mysql.connector import connect, Error
+try:
+    with connect(
+        host="localhost",
+        user=input("u1681087_default"),
+        password=getpass("i4hPHL7qj87oef0E"),
+        database="u1681087_default",
+    ) as connection:
+        print(connection)
+except Error as e:
+    print(e)
 
 def vodetel():
-
     return
+
+
 def passajir():
-
-
     return
+
+
 bot = Bot(token="5600064572:AAGMkXtGIgceO06n9VOYYAbgze7dFnJPRbg")
 dp = Dispatcher(bot, storage=MemoryStorage())
 
@@ -29,10 +42,37 @@ inline_btn_1 = InlineKeyboardButton('Водитель!', callback_data='button1'
 inline_btn_2 = InlineKeyboardButton('Пассажир!', callback_data='button2')
 inline_kb1 = InlineKeyboardMarkup().add(inline_btn_1, inline_btn_2)
 
-#bot.py
-@dp.message_handler(commands=['1'])
-async def process_command_1(message: types.Message):
-    await message.answer("Выберите роль", reply_markup=inline_kb1)
+
+# bot.py
+@dp.message_handler(commands=['start'])
+async def process_command_11(message: types.Message):
+    cur.execute(
+        "SELECT count(*) FROM people WHERE chat_id=?", (message.chat.id,))
+    if cur.fetchone()[0] == 1:
+        await message.answer("Выбирите роль", reply_markup=inline_kb1)
+        return
+    else:
+        await message.answer("Прежде чем перейти к делу давай познакомимся: Как тебя зовут?")
+
+        @dp.message_handler(content_types=["text"])
+        async def process_command_1(message: types.Message):
+            chatidd = message.chat.id
+            name = message.text
+            await message.answer(f"Привет {name}, поделись своим контактом")
+            await bot.copy_message(from_chat_id=919865126, chat_id=chatidd, message_id=1715)
+
+            @dp.message_handler(content_types=["contact"])
+            async def process_command_1(message: types.Message):
+                number = message.contact.phone_number
+                usernamee = message.from_user.username
+                user = (chatidd, number, name, '@' + usernamee)
+                cur.execute("INSERT INTO people VALUES(?, ?, ?, ?);", user)
+                conn.commit()
+                await message.answer("Вы успешно прошли регистрацию")
+                await message.answer("Выбирите роль", reply_markup=inline_kb1)
+                return
+
+
 @dp.callback_query_handler(text="button1")
 async def send_random_value(call: types.CallbackQuery):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -112,10 +152,57 @@ async def send_random_value(call: types.CallbackQuery):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = ["Подать заявку", "Водители"]
     keyboard.add(*buttons)
-    await call.message.answer("что вы хотите сделать", reply_markup=keyboard)
-    @dp.callback_query_handler(text="Подать Заявку")
-    async def send_random_value1(call: types.CallbackQuery):
-        await call.message.answer("что вы хотите сделать", reply_markup=keyboard)
+    await call.message.answer("Что вы хотите сделать?", reply_markup=keyboard)
+
+
+@dp.message_handler(lambda message: message.text == "Подать заявку")
+async def without_puree(message: types.Message):
+    cur.execute(
+        "SELECT count(*) FROM PAS WHERE chat_id=?", (message.chat.id,))
+    if cur.fetchone()[0] == 1:
+        await message.answer("Вы уже подали завку,отмените ее или подождите пока ее примут")
+    else:
+
+        await message.answer("Отправьте геопозицию начала поездки")
+        await bot.copy_message(from_chat_id=919865126, chat_id=message.chat.id, message_id=2008)
+        await bot.copy_message(from_chat_id=919865126, chat_id=message.chat.id, message_id=2007)
+        global g
+        g = 0
+
+        @dp.message_handler(content_types=['location'])
+        async def handle_location(message: types.Message):
+            global g
+            if g == 0:
+                global lat1, lon1, chatid, msgid1, msgid2
+
+                lat1 = message.location.latitude
+                lon1 = message.location.longitude
+                chatid = message.chat.id
+                msgid1 = message.message_id
+                await message.answer("Отправьте геопозицию конца поездки")
+                g += 1
+            elif chatid == message.chat.id:
+                msgid2 = message.message_id
+                lat2 = message.location.latitude
+                lon2 = message.location.longitude
+                user = (lat1, lon1, chatid, msgid1, lat2, lon2, msgid2, '@' + message.chat.username)
+                cur.execute("INSERT INTO PAS VALUES(?, ?, ?, ?, ?, ?, ?, ?);", user)
+                conn.commit()
+                g = 0
+                inline_btn_222 = InlineKeyboardButton('Отклонить!', callback_data='button222')
+                inline_kb111 = InlineKeyboardMarkup().add(inline_btn_222)
+                await message.answer("Заявка создана", reply_markup=inline_kb111)
+
+                @dp.callback_query_handler(text="button222")
+                async def send_random_value11(call: types.CallbackQuery):
+                    cur.execute("DELETE FROM PAS WHERE chat_id=?", (chatid,))
+                    conn.commit()
+                    await message.answer("Заявка отклонена")
+            else:
+                await message.answer("Error: Попробуйте подать заявку еще раз (сорри)")
+
+
+# ------------------------------------------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
