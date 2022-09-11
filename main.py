@@ -1,4 +1,6 @@
 from aiogram import types, Bot
+from getpass import getpass
+from mysql.connector import connect, Error
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiogram.types import Message, Location
@@ -14,18 +16,8 @@ logging.basicConfig(level=logging.INFO)
 conn = sqlite3.connect('Social Taxi.db')
 cur = conn.cursor()
 admin_id = [919865126, 1688428776]
-from getpass import getpass
-from mysql.connector import connect, Error
-try:
-    with connect(
-        host="localhost",
-        user=input("u1681087_default"),
-        password=getpass("i4hPHL7qj87oef0E"),
-        database="u1681087_default",
-    ) as connection:
-        print(connection)
-except Error as e:
-    print(e)
+
+
 
 def vodetel():
     return
@@ -76,7 +68,7 @@ async def process_command_11(message: types.Message):
 @dp.callback_query_handler(text="button1")
 async def send_random_value(call: types.CallbackQuery):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    buttons = ["Поиск по заявкам", "Карта"]
+    buttons = ["Поиск по заявкам"]
     keyboard.add(*buttons)
     await call.message.answer("Что вы хотите сделать?", reply_markup=keyboard)
 
@@ -150,7 +142,7 @@ async def without_puree(message: types.Message):
 @dp.callback_query_handler(text="button2")
 async def send_random_value(call: types.CallbackQuery):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    buttons = ["Подать заявку", "Водители"]
+    buttons = ["Подать заявку"]
     keyboard.add(*buttons)
     await call.message.answer("Что вы хотите сделать?", reply_markup=keyboard)
 
